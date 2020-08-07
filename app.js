@@ -22,7 +22,8 @@ const generalQuesions = [
       'Add employees',
       'Add departments',
       'Add roles',
-      'Update employee',
+      "Update employee's role",
+      "Update employee's manager",
       'Remove employee',
       'None',
     ],
@@ -54,12 +55,14 @@ const init = async () => {
     case 'Add roles':
       addRole();
       break;
-    case 'Update employee':
+    case "Update employee's role":
       updateEmployee();
       break;
     case 'Remove employee':
       removeEmployee();
       break;
+    case "Update employee's manager":
+      updateManager();
   }
 };
 
@@ -249,6 +252,72 @@ const removeEmployee = () => {
       (err) => {
         if (err) throw err;
         console.log(`You have fired ${employee} from your company!`);
+        init();
+      }
+    );
+  });
+};
+
+const updateManager = async () => {
+  /*********Get all employees********/
+  connection.query('SELECT * FROM employee', async (err, employees) => {
+    if (err) throw err;
+
+    const employeeArray = [];
+
+    employees.forEach((employee) =>
+      employeeArray.push(employee['first_name'] + ' ' + employee['last_name'])
+    );
+
+    const { employee, manager } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'employee',
+        message: 'Which employee has a new manager?',
+        choices: employeeArray,
+      },
+      {
+        type: 'list',
+        name: 'manager',
+        message: 'Who is the new Manager for this employee?',
+        choices: employeeArray,
+      },
+    ]);
+
+    //find the id of the employee to be updated
+    const employee_firstName = employee.split(' ')[0];
+    const employee_lastName = employee.split(' ')[1];
+
+    const employee_id = employees.find(
+      (employee) =>
+        employee.first_name === employee_firstName &&
+        employee.last_name === employee_lastName
+    ).id;
+
+    //find the id of the employee's new manager
+    const manager_firstName = manager.split(' ')[0];
+    const manager_lastName = manager.split(' ')[1];
+
+    const manager_id = employees.find(
+      (employee) =>
+        employee.first_name === manager_firstName &&
+        employee.last_name === manager_lastName
+    ).id;
+
+    /*********Update Manager********/
+    connection.query(
+      'UPDATE employee SET ? WHERE ?',
+      [
+        {
+          manager_id,
+        },
+        {
+          id: employee_id,
+        },
+      ],
+      (err) => {
+        if (err) throw err;
+        console.log(`${employee}'s new manager is ${manager}`);
         init();
       }
     );

@@ -23,6 +23,7 @@ const generalQuesions = [
       'Add departments',
       'Add roles',
       'Update employee',
+      'Remove employee',
       'None',
     ],
   },
@@ -55,6 +56,9 @@ const init = async () => {
       break;
     case 'Update employee':
       updateEmployee();
+      break;
+    case 'Remove employee':
+      removeEmployee();
       break;
   }
 };
@@ -203,6 +207,51 @@ const updateEmployee = () => {
         }
       );
     });
+  });
+};
+
+const removeEmployee = () => {
+  /*********Get all employees********/
+  connection.query('SELECT * FROM employee', async (err, employees) => {
+    if (err) throw err;
+
+    const employeeArray = [];
+
+    employees.forEach((employee) =>
+      employeeArray.push(employee['first_name'] + ' ' + employee['last_name'])
+    );
+
+    const { employee } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'employee',
+        message: 'Which employee you want to remove?',
+        choices: employeeArray,
+      },
+    ]);
+
+    const employee_firstName = employee.split(' ')[0];
+    const employee_lastName = employee.split(' ')[1];
+
+    //find the id of the employee to be updated
+    const employee_id = employees.find(
+      (employee) =>
+        employee.first_name === employee_firstName &&
+        employee.last_name === employee_lastName
+    ).id;
+
+    /*********Remove employee********/
+    connection.query(
+      'DELETE FROM employee WHERE ?',
+      {
+        id: employee_id,
+      },
+      (err) => {
+        if (err) throw err;
+        console.log(`You have fired ${employee} from your company!`);
+        init();
+      }
+    );
   });
 };
 

@@ -23,8 +23,6 @@ const generalQuesions = [
       'Add departments',
       'Add roles',
       'Update employee',
-      'Update departments',
-      'Update roles',
       'None',
     ],
   },
@@ -64,7 +62,7 @@ const init = async () => {
 /***********Employee Actions***********/
 const findAllEmployees = () => {
   connection.query(
-    `SELECT a.id,a.first_name,a.last_name,title,department.name AS department, CONCAT(b.first_name, ' ', b.last_name) AS Manager
+    `SELECT a.id,a.first_name,a.last_name,title,salary,department.name AS department, CONCAT(b.first_name, ' ', b.last_name) AS Manager
     FROM employee a
     LEFT JOIN employee b ON a.manager_id = b.id
     LEFT JOIN role on a.role_id = role.id
@@ -112,9 +110,14 @@ const addEmployee = () => {
           choices: employeeArray,
         },
       ]);
+      console.log(manager);
 
-      const manager_firstName = manager.split(' ')[0];
-      const manger_lastName = manager.split(' ')[1];
+      let manager_firstName, manger_lastName;
+
+      if (manager !== 'None') {
+        manager_firstName = manager.split(' ')[0];
+        manger_lastName = manager.split(' ')[1];
+      }
 
       connection.query(
         'INSERT INTO employee SET ?',
